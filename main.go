@@ -82,18 +82,15 @@ func main() {
 		log.Fatal(err)
 	}
 
+	cfg := &SequenceAlignerConfig{
+		GapPenalty:      gapValue,
+		GapStartPenalty: startPenalty,
+		GapEndPenalty:   endPenalty,
+	}
 	var aligner Aligner
 	if memSave {
-		if !startPenalty || !endPenalty {
-			io.WriteString(out, "WARN: In mem-save mode spen and epen always enabled.\n")
-		}
-		aligner = NewSequenceAlignerMem(gapValue, adapter)
+		aligner = NewSequenceAlignerMem(cfg, adapter)
 	} else {
-		cfg := &SequenceAlignerConfig{
-			GapPenalty:      gapValue,
-			GapStartPenalty: startPenalty,
-			GapEndPenalty:   endPenalty,
-		}
 		aligner = NewSequenceAligner(cfg, adapter)
 	}
 

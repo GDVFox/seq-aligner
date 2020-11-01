@@ -1,39 +1,23 @@
 package main
 
-import "strings"
-
-const gapByte = byte('-')
-
-type action byte
-
-const (
-	letterAction action = iota
-	firstGapAction
-	secondGapAction
+import (
+	"strings"
 )
-
-// SequenceAlignerConfig набор параметров для конфигурации SequenceAligner
-type SequenceAlignerConfig struct {
-	GapStartPenalty bool
-	GapEndPenalty   bool
-	GapPenalty      int
-}
 
 // SequenceAligner вспомогательный объект для глобального выравнивания
 type SequenceAligner struct {
-	gapStartPenalty bool
-	gapEndPenalty   bool
-	gapPenalty      int
-	scorer          Scorer
+	sequenceAlignerBase
 }
 
 // NewSequenceAligner возвращает новый объект SequenceAligner
 func NewSequenceAligner(cfg *SequenceAlignerConfig, scorer Scorer) *SequenceAligner {
 	return &SequenceAligner{
-		gapStartPenalty: cfg.GapStartPenalty,
-		gapEndPenalty:   cfg.GapEndPenalty,
-		gapPenalty:      cfg.GapPenalty,
-		scorer:          scorer,
+		sequenceAlignerBase: sequenceAlignerBase{
+			gapStartPenalty: cfg.GapStartPenalty,
+			gapEndPenalty:   cfg.GapEndPenalty,
+			gapPenalty:      cfg.GapPenalty,
+			scorer:          scorer,
+		},
 	}
 }
 
@@ -106,20 +90,4 @@ func (a *SequenceAligner) buildBaseMatrices(rowCount, colCount int) ([][]int, []
 	}
 
 	return dp, actions
-}
-
-func (a *SequenceAligner) getGapPenalty(i, max int) int {
-	// если не штрафуем за gap в начале и находимся в начале какуй-либо последовательности,
-	// то штраф за gap в этой последовательности нужно убрать.
-	if !a.gapStartPenalty && i == 0 {
-		return 0
-	}
-
-	// если не штрафуем за gap в конце и прошли какую-либо последовательность до конца,
-	// то штраф за gap в этой последовательности нужно убрать.
-	if !a.gapEndPenalty && i == max {
-		return 0
-	}
-
-	return a.gapPenalty
 }
