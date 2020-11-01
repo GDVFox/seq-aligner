@@ -9,6 +9,11 @@ import (
 	"os"
 )
 
+// Aligner интерфейс объекта, умеющего выравнивать строки
+type Aligner interface {
+	Align(str1, str2 string) (string, string, int)
+}
+
 // ErrWrongNumberOfFiles возвращается
 var (
 	ErrWrongNumberOfFiles = errors.New("expected one or two sequences files")
@@ -30,6 +35,8 @@ var (
 
 	startPenalty bool
 	endPenalty   bool
+
+	memSave bool
 )
 
 func init() {
@@ -42,6 +49,8 @@ func init() {
 
 	flag.BoolVar(&startPenalty, "spen", false, "enables start gap penalty")
 	flag.BoolVar(&endPenalty, "epen", false, "enables end gap penalty")
+
+	flag.BoolVar(&memSave, "mem-save", false, "enables memory save mode")
 }
 
 // Sequence описывает последовательность из fasta файла
@@ -73,12 +82,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cfg := &SequenceAlignerConfig{
-		GapPenalty:      gapValue,
-		GapStartPenalty: startPenalty,
-		GapEndPenalty:   endPenalty,
+	var aligner Aligner
+	if memSave {
+		if !startPenalty || !endPenalty {
+			io.WriteString(out, "WARN: In mem-save mode spen and epen always enabled.\n")
+		}
+		aligner = NewSequenceAlignerMem(gapValue, adapter)
+	} else {
+		cfg := &SequenceAlignerConfig{
+			GapPenalty:      gapValue,
+			GapStartPenalty: startPenalty,
+			GapEndPenalty:   endPenalty,
+		}
+		aligner = NewSequenceAligner(cfg, adapter)
 	}
-	aligner := NewSequenceAligner(cfg, adapter)
+
 	aligned1, aligned2, score := aligner.Align(sequences[0].Value, sequences[1].Value)
 
 	if pretty && out != os.Stdout {
