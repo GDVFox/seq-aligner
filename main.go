@@ -20,9 +20,10 @@ var (
 )
 
 const (
-	dnaMode     = "dna"
-	proteinMode = "protein"
-	defaultMode = "default"
+	dnaMode         = "dna"
+	proteinB62Mode  = "protein_b62"
+	proteinP250Mode = "protein_p250"
+	defaultMode     = "default"
 )
 
 var (
