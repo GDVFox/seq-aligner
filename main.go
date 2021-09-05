@@ -122,7 +122,7 @@ func main() {
 	if pretty {
 		WritePretty(out, aligned1, aligned2)
 	} else {
-		WriteAlignedDefault(out, 100, aligned1, aligned2)
+		WriteAlignedDefault(out, lineLength, aligned1, aligned2)
 	}
 	fmt.Fprintf(out, "Score: %d\n", score)
 }
