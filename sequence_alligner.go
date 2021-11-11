@@ -13,6 +13,7 @@ type SequenceAligner struct {
 func NewSequenceAligner(cfg *SequenceAlignerConfig, scorer Scorer) *SequenceAligner {
 	return &SequenceAligner{
 		sequenceAlignerBase: sequenceAlignerBase{
+			allowLocal:      cfg.AllowLocal,
 			gapStartPenalty: cfg.GapStartPenalty,
 			gapEndPenalty:   cfg.GapEndPenalty,
 			gapPenalty:      cfg.GapPenalty,
@@ -26,10 +27,12 @@ func (a *SequenceAligner) Align(str1, str2 string) (string, string, int) {
 	actions, score := a.findActions(str1, str2)
 	alignedStr1, alignedStr2 := &strings.Builder{}, &strings.Builder{}
 
-	i, j := len(str1), len(str2)
+	i, j := len(actions)-1, len(actions[0])-1
+
+WriteCycle:
 	for {
 		if i == 0 && j == 0 {
-			break
+			break WriteCycle
 		}
 
 		switch actions[i][j] {
@@ -46,6 +49,8 @@ func (a *SequenceAligner) Align(str1, str2 string) (string, string, int) {
 			alignedStr1.WriteByte(str1[i-1])
 			alignedStr2.WriteByte(gapByte)
 			i--
+		case zeroAction:
+			break WriteCycle
 		}
 	}
 
@@ -61,13 +66,35 @@ func (a *SequenceAligner) findActions(str1, str2 string) ([][]action, int) {
 				dp[i][j-1]+a.getGapPenalty(i, len(str1)),
 				dp[i-1][j]+a.getGapPenalty(j, len(str2)),
 			)
+			if a.allowLocal && val < 0 {
+				val = 0
+				indx = int(zeroAction)
+			}
 
 			dp[i][j] = val
 			actions[i][j] = action(indx)
 		}
 	}
 
-	return actions, dp[len(str1)][len(str2)]
+	maxI, maxJ := len(str1), len(str2)
+	if a.allowLocal {
+		maxVal := -int(^uint(0)>>1) - 1 // minimal int value
+		for i := 0; i < len(dp); i++ {
+			for j := 0; j < len(dp[i]); j++ {
+				if dp[i][j] >= maxVal {
+					maxI, maxJ = i, j
+					maxVal = dp[i][j]
+				}
+			}
+		}
+
+		actions = actions[:maxI+1]
+		for i := 0; i < len(actions); i++ {
+			actions[i] = actions[i][:maxJ+1]
+		}
+	}
+
+	return actions, dp[maxI][maxJ]
 }
 
 func (a *SequenceAligner) buildBaseMatrices(rowCount, colCount int) ([][]int, [][]action) {

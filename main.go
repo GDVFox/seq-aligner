@@ -29,6 +29,7 @@ const (
 var (
 	gapValue       int
 	extendGapValue int
+	allowLocal     bool
 
 	mode string
 
@@ -46,6 +47,7 @@ func init() {
 	flag.IntVar(&gapValue, "gap", -2, "gap penalty")
 	flag.IntVar(&gapValue, "gap-open", -2, "open gap penalty")
 	flag.IntVar(&extendGapValue, "gap-extend", 0, "extend gap penalty")
+	flag.BoolVar(&allowLocal, "local", false, "allows local alignment")
 
 	flag.StringVar(&mode, "mode", defaultMode, "(dna|protein|default) alphabet and score table switch")
 
@@ -57,6 +59,7 @@ func init() {
 	flag.BoolVar(&endPenalty, "epen", false, "enables end gap penalty")
 
 	flag.BoolVar(&memSave, "mem-save", false, "enables memory save mode")
+
 }
 
 // Sequence описывает последовательность из fasta файла
@@ -99,6 +102,7 @@ func main() {
 	}
 
 	cfg := &SequenceAlignerConfig{
+		AllowLocal:      allowLocal,
 		GapPenalty:      gapValue,
 		GapStartPenalty: startPenalty,
 		GapEndPenalty:   endPenalty,

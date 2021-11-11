@@ -8,16 +8,19 @@ const (
 	letterAction action = iota
 	firstGapAction
 	secondGapAction
+	zeroAction
 )
 
 // SequenceAlignerConfig набор параметров для конфигурации SequenceAligner
 type SequenceAlignerConfig struct {
+	AllowLocal      bool
 	GapStartPenalty bool
 	GapEndPenalty   bool
 	GapPenalty      int
 }
 
 type sequenceAlignerBase struct {
+	allowLocal      bool
 	gapStartPenalty bool
 	gapEndPenalty   bool
 	gapPenalty      int
